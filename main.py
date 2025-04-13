@@ -3,6 +3,8 @@ import clrprint
 import sys
 import random 
 
+# Константы
+WIDTH, HEIGHT = 640, 720 # 640 + 80 из-за меню
 class Player:
     def __init__(self):
         self.heart = 4
@@ -10,7 +12,10 @@ class Player:
         self.size_y = 32
         self.pos_x = 60
         self.pos_y = 60
+        self.apple_pos_x = 60
+        self.apple_pos_y = 60
         self.see = 1  # 1 - up, 2 - down, 3 - right, 4 - left
+        self.image_apple = pygame.image.load('sprites/apple.png')
         self.image_head = pygame.image.load('sprites/head.png')
         self.image_body = pygame.image.load('sprites/body.png')
         self.last_down = 1  # 1 - up, 2 - down, 3 - right, 4 - left
@@ -30,18 +35,27 @@ class Player:
         elif self.see == 4:  # Влево
             self.pos_x -= 5
 
+    def apple(self):
+        self.pos_x, self.pos_y = self.apple_random_position()
+
+    def apple_random_position(self):
+        # Генерация случайной позиции для яблока
+        x = random.randint(0, (WIDTH - self.size_x) // 5) * 5
+        y = random.randint(0, (HEIGHT - self.size_y - 60) // 5) * 5  # Учитываем высоту меню
+        return x, y
+
+    def apple_draw(self, screen):
+        screen.blit(self.image_apple, (self.apple_pos_x, self.apple_pos_y))
 
 
 player = Player()
 # Инициализация Pygame
 pygame.init()
 
-# Константы
-WIDTH, HEIGHT = 640, 720 # 640 + 80 из-за меню
+
 FPS = 15
 # Images
 menu = pygame.image.load('sprites/menu.png')
-apple = pygame.image.load('sprites/apple.png')
 heart = pygame.image.load('sprites/heart.png')
 pause = pygame.image.load('sprites/pause.png')
 play = pygame.image.load('sprites/play.png')
@@ -89,6 +103,7 @@ def main():
 
         # Рисуем игрока
         player.draw(screen)
+        player.apple_draw(screen)
 
         # Обновление экрана
         pygame.display.flip()
