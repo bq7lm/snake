@@ -1,10 +1,10 @@
 import pygame
-import clrprint
 import sys
 import random 
 
 # Константы
 WIDTH, HEIGHT = 640, 720 # 640 + 80 из-за меню
+
 class Player:
     def __init__(self):
         self.heart = 4
@@ -47,11 +47,24 @@ class Player:
     def apple_draw(self, screen):
         screen.blit(self.image_apple, (self.apple_pos_x, self.apple_pos_y))
 
+    def game_over(self, screen):
+        font = pygame.font.Font(None, 74)
+        text = font.render("Game Over", True, (255, 0, 0))
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+        pygame.display.flip()
+        pygame.time.wait(2000)  # Ждем 2 секунды перед перезапуском
+        self.reset()
+
+    def reset(self):
+        self.heart = 4
+        self.pos_x = 60
+        self.pos_y = 60
+        self.see = 1  # Сброс направления
 
 player = Player()
+
 # Инициализация Pygame
 pygame.init()
-
 
 FPS = 15
 # Images
@@ -92,6 +105,12 @@ def main():
         # Движение игрока
         player.move()
 
+
+        # Проверка выхода за пределы поля
+        if (player.pos_x < 0 or player.pos_x >= WIDTH or
+            player.pos_y < 0 or player.pos_y >= HEIGHT - 60):  # Учитываем высоту меню
+            player.game_over(screen)
+
         # Заполнение фона
         screen.fill('GREEN')
         screen.blit(menu, (0, 660))
@@ -111,3 +130,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
