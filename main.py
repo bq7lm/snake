@@ -19,7 +19,7 @@ class Player:
         self.image_head = pygame.image.load('sprites/head.png')
         self.image_body = pygame.image.load('sprites/body.png')
         self.last_down = 1  # 1 - up, 2 - down, 3 - right, 4 - left
-        self.score = 1
+        self.score = 0
         self.record = 0
 
     def draw(self, screen):
@@ -56,7 +56,7 @@ class Player:
 
         font_continue = pygame.font.Font(None, 32)
         text_continue = font_continue.render(f"Best record: {self.record} | You: {self.score} | Press Enter to Restart", True, (255, 255, 255))
-        screen.blit(text_continue, (100, 400))
+        screen.blit(text_continue, (80, 400))
 
         pygame.display.flip()
 
@@ -103,6 +103,7 @@ def main():
         if not game_over:
             if keys[pygame.K_UP]:
                 player.see = 1
+           
             elif keys[pygame.K_DOWN]:
                 player.see = 2
             elif keys[pygame.K_RIGHT]:
@@ -114,8 +115,8 @@ def main():
             player.move()
 
             # Проверка выхода за пределы поля
-            if (player.pos_x < 0 or player.pos_x >= WIDTH or
-                player.pos_y < 0 or player.pos_y >= HEIGHT - 60):  # Учитываем высоту меню
+            if (player.pos_x < 0 or player.pos_x >= WIDTH-player.size_x or
+                player.pos_y < 0 or player.pos_y >= HEIGHT - 60 - player.size_y):  # Учитываем высоту меню
                 game_over = True
 
         else:
@@ -123,28 +124,30 @@ def main():
             player.game_over(screen)
 
             # Проверка нажатия клавиши Enter для перезапуска игры
-            if keys[pygame.K_RETURN]:  # K_RETURN - это Enter
+            if keys[pygame.K_RETURN]:  # Enter
                 player.reset()
                 game_over = False
-            if keys[pygame.K_SPACE]:
+			
+            elif keys[pygame.K_SPACE]:  # SPACE
                 player.reset()
                 game_over = False
+
 
         # Заполнение фона
-        screen.fill('GREEN')
-        screen.blit(menu, (0, 660))
-
-        for i in range(player.heart):
-            screen.blit(heart, (8 + i * 40, 680))  # Отрисовка сердечек с отступом
-
-        screen.blit(pause, (600 , 680))
-
-        font_score = pygame.font.Font(None, 32)
-        score_text = font_score.render(f"Score {player.score} | Record: {player.record}", True, (255, 255, 255))  # Белый цвет текста
-        screen.blit(score_text, (240, 680))  # Центрируем текст по горизонтали
-
-        # Рисуем игрока, если игра не завершена
         if not game_over:
+            screen.fill('GREEN')  # Заполняем фон зеленым, если игра не завершена
+            screen.blit(menu, (0, 660))
+
+            for i in range(player.heart):
+                screen.blit(heart, (8 + i * 40, 680))  # Отрисовка сердечек с отступом
+
+            screen.blit(pause, (600 , 680))
+
+            font_score = pygame.font.Font(None, 32)
+            score_text = font_score.render(f"Score {player.score} | Record: {player.record}", True, (255, 255, 255))  # Белый цвет текста
+            screen.blit(score_text, (240, 680))  # Центрируем текст по горизонтали
+
+            # Рисуем игрока и яблоко, если игра не завершена
             player.draw(screen)
             player.apple_draw(screen)
 
@@ -154,4 +157,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
