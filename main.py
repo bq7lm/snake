@@ -19,6 +19,8 @@ class Player:
         self.image_head = pygame.image.load('sprites/head.png')
         self.image_body = pygame.image.load('sprites/body.png')
         self.last_down = 1  # 1 - up, 2 - down, 3 - right, 4 - left
+        self.score = 1
+        self.record = 0
 
     def draw(self, screen):
         # Рисуем голову игрока
@@ -48,18 +50,22 @@ class Player:
         screen.blit(self.image_apple, (self.apple_pos_x, self.apple_pos_y))
 
     def game_over(self, screen):
-        font = pygame.font.Font(None, 74)
+        font = pygame.font.Font(None, 64)
         text = font.render("Game Over", True, (255, 0, 0))
         screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+
+        font_continue = pygame.font.Font(None, 32)
+        text_continue = font_continue.render(f"Best record: {self.record} | You: {self.score} | Press Enter to Restart", True, (255, 255, 255))
+        screen.blit(text_continue, (100, 400))
+
         pygame.display.flip()
-        pygame.time.wait(2000)  # Ждем 2 секунды перед перезапуском
-        self.reset()
 
     def reset(self):
         self.heart = 4
         self.pos_x = 60
         self.pos_y = 60
         self.see = 1  # Сброс направления
+        self.score = 0
 
 player = Player()
 
@@ -84,6 +90,7 @@ pygame.display.set_icon(icon)
 # Главный игровой цикл
 def main():
     clock = pygame.time.Clock()
+    game_over = False
     
     while True:
         for event in pygame.event.get():
@@ -93,23 +100,35 @@ def main():
 
         # Обработка нажатий клавиш для управления игроком
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_UP]:
-            player.see = 1
-        elif keys[pygame.K_DOWN]:
-            player.see = 2
-        elif keys[pygame.K_RIGHT]:
-            player.see = 3
-        elif keys[pygame.K_LEFT]:
-            player.see = 4
+        if not game_over:
+            if keys[pygame.K_UP]:
+                player.see = 1
+            elif keys[pygame.K_DOWN]:
+                player.see = 2
+            elif keys[pygame.K_RIGHT]:
+                player.see = 3
+            elif keys[pygame.K_LEFT]:
+                player.see = 4
 
-        # Движение игрока
-        player.move()
+            # Движение игрока
+            player.move()
 
+            # Проверка выхода за пределы поля
+            if (player.pos_x < 0 or player.pos_x >= WIDTH or
+                player.pos_y < 0 or player.pos_y >= HEIGHT - 60):  # Учитываем высоту меню
+                game_over = True
 
-        # Проверка выхода за пределы поля
-        if (player.pos_x < 0 or player.pos_x >= WIDTH or
-            player.pos_y < 0 or player.pos_y >= HEIGHT - 60):  # Учитываем высоту меню
+        else:
+            # Если игра завершена, показываем экран "Game Over"
             player.game_over(screen)
+
+            # Проверка нажатия клавиши Enter для перезапуска игры
+            if keys[pygame.K_RETURN]:  # K_RETURN - это Enter
+                player.reset()
+                game_over = False
+            if keys[pygame.K_SPACE]:
+                player.reset()
+                game_over = False
 
         # Заполнение фона
         screen.fill('GREEN')
@@ -120,9 +139,14 @@ def main():
 
         screen.blit(pause, (600 , 680))
 
-        # Рисуем игрока
-        player.draw(screen)
-        player.apple_draw(screen)
+        font_score = pygame.font.Font(None, 32)
+        score_text = font_score.render(f"Score {player.score} | Record: {player.record}", True, (255, 255, 255))  # Белый цвет текста
+        screen.blit(score_text, (240, 680))  # Центрируем текст по горизонтали
+
+        # Рисуем игрока, если игра не завершена
+        if not game_over:
+            player.draw(screen)
+            player.apple_draw(screen)
 
         # Обновление экрана
         pygame.display.flip()
