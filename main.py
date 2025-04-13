@@ -12,8 +12,7 @@ class Player:
         self.size_y = 32
         self.pos_x = 60
         self.pos_y = 60
-        self.apple_pos_x = 60
-        self.apple_pos_y = 60
+        self.apple_pos_x, self.apple_pos_y = self.apple_random_position()
         self.see = 1  # 1 - up, 2 - down, 3 - right, 4 - left
         self.image_apple = pygame.image.load('sprites/apple.png')
         self.image_head = pygame.image.load('sprites/head.png')
@@ -37,14 +36,27 @@ class Player:
         elif self.see == 4:  # Влево
             self.pos_x -= 5
 
-    def apple(self):
-        self.pos_x, self.pos_y = self.apple_random_position()
-
     def apple_random_position(self):
         # Генерация случайной позиции для яблока
         x = random.randint(0, (WIDTH - self.size_x) // 5) * 5
         y = random.randint(0, (HEIGHT - self.size_y - 60) // 5) * 5  # Учитываем высоту меню
         return x, y
+
+    def check_collision(self):
+        # Проверка столкновения с яблоком
+        if (self.pos_x < self.apple_pos_x + self.size_x and
+            self.pos_x + self.size_x > self.apple_pos_x and
+            self.pos_y < self.apple_pos_y + self.size_y and
+            self.pos_y + self.size_y > self.apple_pos_y):
+            return True
+        return False
+
+    def update_apple(self):
+        # Обновление позиции яблока
+        self.apple_pos_x, self.apple_pos_y = self.apple_random_position()
+        self.score += 1  # Увеличиваем счет при поедании яблока
+        if self.score >= self.record:
+        	self.record = self.score # Проверка рекорда
 
     def apple_draw(self, screen):
         screen.blit(self.image_apple, (self.apple_pos_x, self.apple_pos_y))
@@ -66,6 +78,7 @@ class Player:
         self.pos_y = 60
         self.see = 1  # Сброс направления
         self.score = 0
+        self.apple_pos_x, self.apple_pos_y = self.apple_random_position()  # Сброс позиции яблока
 
 player = Player()
 
@@ -101,23 +114,26 @@ def main():
         # Обработка нажатий клавиш для управления игроком
         keys = pygame.key.get_pressed()
         if not game_over:
-            if keys[pygame.K_UP]:
+            if keys[pygame.K_UP] and player.see != 2:  # Запрет на движение в противоположном направлении
                 player.see = 1
-           
-            elif keys[pygame.K_DOWN]:
+            elif keys[pygame.K_DOWN] and player.see != 1:
                 player.see = 2
-            elif keys[pygame.K_RIGHT]:
+            elif keys[pygame.K_RIGHT] and player.see != 4:
                 player.see = 3
-            elif keys[pygame.K_LEFT]:
+            elif keys[pygame.K_LEFT] and player.see != 3:
                 player.see = 4
 
             # Движение игрока
             player.move()
 
             # Проверка выхода за пределы поля
-            if (player.pos_x < 0 or player.pos_x >= WIDTH-player.size_x or
+            if (player.pos_x < 0 or player.pos_x >= WIDTH - player.size_x or
                 player.pos_y < 0 or player.pos_y >= HEIGHT - 60 - player.size_y):  # Учитываем высоту меню
                 game_over = True
+
+            # Проверка столкновения с яблоком
+            if player.check_collision():
+                player.update_apple()  # Обновляем позицию яблока и увеличиваем счет
 
         else:
             # Если игра завершена, показываем экран "Game Over"
@@ -127,11 +143,9 @@ def main():
             if keys[pygame.K_RETURN]:  # Enter
                 player.reset()
                 game_over = False
-			
             elif keys[pygame.K_SPACE]:  # SPACE
                 player.reset()
                 game_over = False
-
 
         # Заполнение фона
         if not game_over:
@@ -141,7 +155,7 @@ def main():
             for i in range(player.heart):
                 screen.blit(heart, (8 + i * 40, 680))  # Отрисовка сердечек с отступом
 
-            screen.blit(pause, (600 , 680))
+            screen.blit(pause, (600, 680))
 
             font_score = pygame.font.Font(None, 32)
             score_text = font_score.render(f"Score {player.score} | Record: {player.record}", True, (255, 255, 255))  # Белый цвет текста
